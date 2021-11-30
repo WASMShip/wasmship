@@ -3,22 +3,27 @@ use super::types::{
 };
 use super::AbstractRuntime;
 use wasmtime::*;
-use std::path::Path;
+
+// To avoid Module of wasmtime
+type SuperModule = super::types::Module;
 
 pub struct Wasmtime {
-    module: Module,
+    module: SuperModule,
+    rt_module: Module,
     store: Store<()>,
     functions: FunctionExports,
 }
 
 // Implementation of the `AbstractRuntime` trait
 impl AbstractRuntime for Wasmtime {
-    fn new(path: &Path) -> RuntimeResult<Wasmtime> {
+    fn new(super_module: SuperModule) -> RuntimeResult<Wasmtime> {
         let engine = Engine::default();
-        let module = Module::from_file(&engine, path).unwrap();
+        let module_path = super_module.path.join(&super_module.main);
+        let rt_module = Module::from_file(&engine, module_path).unwrap();
         let store = Store::new(&engine, ());
         Ok(Wasmtime {
-            module,
+            module: super_module,
+            rt_module,
             store,
             functions: FunctionExports::new(),
         })
@@ -26,7 +31,7 @@ impl AbstractRuntime for Wasmtime {
 
     fn function_exports(&self) -> RuntimeResult<FunctionExports> {
         let mut func_exports = FunctionExports::new();
-        let exports = self.module.exports();
+        let exports = self.rt_module.exports();
         for export in exports {
             if let Some(func) = export.ty().func() {
                 let mut params = Vec::new();
@@ -46,7 +51,16 @@ impl AbstractRuntime for Wasmtime {
         Ok(func_exports)
     }
 
-    fn invoke(&mut self, function: &str, parameters: Vec<String>) -> RuntimeResult<Vec<Value>> {
+    fn invoke(
+        &mut self,
+        function: Option<&str>,
+        parameters: Vec<String>,
+    ) -> RuntimeResult<Vec<Value>> {
+        if function.is_none() && self.module.entry.is_none() {
+            return Err(RuntimeError::NoEntryPoint);
+        }
+        let default_entry = self.module.entry.clone().unwrap();
+        let function: &str = function.unwrap_or(&default_entry);
         if self.functions.is_empty() {
             self.functions = self.function_exports()?;
         }
@@ -70,7 +84,7 @@ impl AbstractRuntime for Wasmtime {
             )));
         }
         let function_results = function_export.results.clone();
-        let instance = Instance::new(&mut self.store, &self.module, &[])?;
+        let instance = Instance::new(&mut self.store, &self.rt_module, &[])?;
         let func = instance.get_func(&mut self.store, function).unwrap();
         let mut params = vec![Val::null(); function_params.len()];
         let mut results = vec![Val::null(); function_results.len()];

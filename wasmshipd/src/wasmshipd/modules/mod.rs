@@ -1,12 +1,11 @@
-use std::path::{Path, PathBuf};
-
+use std::path::Path;
 mod repositories;
 mod types;
+pub use repositories::Module;
 use repositories::Repositories;
 use types::{ModuleError, ModuleResult};
 
 pub struct Modules {
-    path: String,
     repositories: Repositories,
 }
 
@@ -18,25 +17,14 @@ impl Modules {
                 Ok(repositories) => repositories,
                 Err(err) => return Err(err),
             };
-            Ok(Modules {
-                path: path.to_string(),
-                repositories,
-            })
+            Ok(Modules { repositories })
         } else {
             Err(ModuleError::NotFound(Some(base_path.to_path_buf())))
         }
     }
 
-    pub fn get_module(&self, key: &str, tag: &str) -> Option<PathBuf> {
-        if self.repositories.have_repository(key, tag) {
-            let hash = self.repositories.get_hash(key, tag).unwrap();
-            let path = Path::new(&self.path).join(&hash.hash).join("module.wasm");
-            println!("{:?}", path);
-            if path.exists() {
-                return Some(path);
-            }
-        }
-        None
+    pub fn get_module(&self, key: &str, tag: &str) -> Option<Module> {
+        self.repositories.get_module(key, tag)
     }
 }
 

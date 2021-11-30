@@ -1,7 +1,7 @@
 {
     "repositories":{
         "mymod":{
-            "latest":"sha256:3bf1c446f992d9d48096234eea699be44930ae62bd53630140a621dd04c76c92"
+            "latest":"3bf1c446f992d9d48096234eea699be44930ae62bd53630140a621dd04c76c92"
         }
     }
 }

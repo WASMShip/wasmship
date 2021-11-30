@@ -2,9 +2,10 @@ use std::collections::HashMap;
 use std::num::ParseIntError;
 pub type FunctionExports = HashMap<String, FunctionExport>;
 pub type RuntimeResult<T> = Result<T, RuntimeError>;
+pub type Module = crate::modules::Module;
 
 /// Enum for parameters and return values
-/// 
+///
 /// As in different runtimes, they may provide their own type for parameters and return values. We provide a generic type and conversion functions for them.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
@@ -39,6 +40,8 @@ pub struct FunctionExport {
 /// Error from runtime
 #[derive(Debug)]
 pub enum RuntimeError {
+    // Couldn't find function to invoke
+    NoEntryPoint,
     /// This should be used when the runtime failed to execute the function
     ExecutionError(String),
     // TODO: Add more error type
