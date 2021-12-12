@@ -3,4 +3,4 @@ pub mod pull;
 pub mod push;
 pub mod run;
 
-pub trait Command{}
+pub trait Command {}

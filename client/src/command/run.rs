@@ -1,7 +1,7 @@
-use command::Command;
+use crate::command::Command;
 
 pub struct RunCommand {
-    command: str,
+    command: String,
     value: String,
 }
 

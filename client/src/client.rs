@@ -1,83 +1,89 @@
-use command::Command;
+use async_trait::async_trait;
+use hyper::body::HttpBody;
+use hyperlocal::{UnixClientExt, Uri};
+use std::error::Error;
+use tokio::io;
+use tokio::io::AsyncWriteExt;
 
-pub struct Client<T> {
-    inner: T,
+pub struct Client {
+    inner: RealClient,
     scheme: String,
 }
 
+#[async_trait]
 pub trait Call {
-    fn call(&self, command: &Command);
+    async fn call(&mut self);
 }
 
 #[cfg(unix)]
-struct UnixClient {
+pub struct RealClient {
     socket_fd: String,
 }
 
 #[cfg(windows)]
-struct WindowsClient {
-
-}
+#[async_trait]
+pub struct RealClient {}
 
 const FILE_PATH: &str = "/tmp/wasmship.sock";
 
-impl<T> Client<T> {
-
-    pub fn new(client: T) -> Client<T> {
+impl Client {
+    pub fn new(client: RealClient) -> Client {
         Client {
             inner: client,
             scheme: "http".to_string(),
         }
     }
 
-    pub fn init() -> Client<T>{
-        #[cfg(unix)]
-        let client = Self::new(UnixClient::new());
-        #[cfg(windows)]
-        let client = Self::new(WindowsClient::new());
-        return client;
+    pub fn init() -> Client {
+        Self::new(RealClient::new())
     }
 
-    pub fn into_inner(self) -> T {
+    pub fn into_inner(self) -> RealClient {
         self.inner
     }
 }
 
-impl<T> Call for Client<T>
-where
-    T: Call
-{
-    fn call(&self, command: &Command) {
-        self.inner.call(command);
+#[async_trait]
+impl Call for Client {
+    async fn call(&mut self) {
+        self.inner.call().await;
     }
 }
 
 #[cfg(unix)]
-impl Call for UnixClient {
-    fn call(&self, command: &Command) {
-
+#[async_trait]
+impl Call for RealClient {
+    async fn call(&mut self) {
+        let client = hyper::Client::unix();
+        let url = Uri::new("/tmp/wasmship.sock", "/").into();
+        let mut response = client.get(url).await.unwrap();
+        while let Some(next) = response.data().await {
+            let chunk = next.unwrap();
+            io::stdout().write_all(&chunk).await.unwrap();
+        }
     }
 }
 
 #[cfg(unix)]
-impl UnixClient {
-    fn new() -> UnixClient {
-        UnixClient {
+impl RealClient {
+    fn new() -> RealClient {
+        RealClient {
             socket_fd: FILE_PATH.to_string(),
         }
     }
 }
 
 #[cfg(windows)]
-impl Call for WindowsClient {
-    fn call(&self, command: &Command) {
-        unimplemented!("support unix first.")
+#[async_trait]
+impl Call for RealClient {
+    async fn call(&mut self) {
+        unimplemented!("named pipe not support now.")
     }
 }
 
 #[cfg(windows)]
-impl WindowsClient {
-    fn new() -> WindowsClient {
-        WindowsClient {}
+impl RealClient {
+    fn new() -> RealClient {
+        RealClient {}
     }
 }

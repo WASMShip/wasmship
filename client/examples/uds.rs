@@ -1,19 +1,23 @@
 extern crate hyper;
+extern crate hyperlocal;
 
-use hyper::Client;
-use std::os::unix::net::{UnixListener, UnixStream};
+use hyper::{body::HttpBody, Client};
+use hyperlocal::{UnixClientExt, Uri};
+use std::error::Error;
+use tokio::io::{self, AsyncWriteExt as _};
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let unix_stream = UnixStream::connect("/var/wasmship.sock").unwrap();
-    let client = Client::builder().build(unix_stream);
-    // Parse an `http::Uri`...
-    let uri = "http://httpbin.org/ip".parse()?;
+async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
+    let url = Uri::new("/tmp/wasmship.sock", "/").into();
 
-    // Await the response...
-    let mut resp = client.get(uri).await?;
+    let client = Client::unix();
 
-    println!("Response: {}", resp.status());
+    let mut response = client.get(url).await?;
+
+    while let Some(next) = response.data().await {
+        let chunk = next?;
+        io::stdout().write_all(&chunk).await?;
+    }
 
     Ok(())
 }
