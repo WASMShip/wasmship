@@ -1,5 +1,30 @@
+[package]
+name = "wasmship-lib"
+version = "0.1.0"
+edition = "2021"
+default-run = "wasmship"
+
+[lib]
+doctest = false
+
+[[bin]]
+name = "wasmship"
+path = "src/bin/wasmship.rs"
+doc = false
+
+[dependencies]
+daemon = { path = "./daemon" }
+
+
 [workspace]
 members = [
-    "wasmship",
-    "wasmshipd",
+    "client",
+    "daemon",
+    "library/moudle",
+    "library/runtime",
+    "library/storage",
+    "library/core"
 ]
+
+[[example]]
+name = "lib-run-wasm"

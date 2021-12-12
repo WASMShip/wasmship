@@ -1,5 +1,0 @@
-{
-    "main": "add.wasm",
-    "entry": "add",
-    "link": []
-}
