@@ -1,9 +1,6 @@
+use crate::command::Command;
 use async_trait::async_trait;
-use hyper::body::HttpBody;
-use hyperlocal::{UnixClientExt, Uri};
-use std::error::Error;
-use tokio::io;
-use tokio::io::AsyncWriteExt;
+
 
 pub struct Client {
     inner: RealClient,
@@ -12,7 +9,7 @@ pub struct Client {
 
 #[async_trait]
 pub trait Call {
-    async fn call(&mut self);
+    async fn call(&mut self, command: impl Command + Send + Sync + 'static);
 }
 
 #[cfg(unix)]
@@ -21,7 +18,6 @@ pub struct RealClient {
 }
 
 #[cfg(windows)]
-#[async_trait]
 pub struct RealClient {}
 
 const FILE_PATH: &str = "/tmp/wasmship.sock";
@@ -45,15 +41,23 @@ impl Client {
 
 #[async_trait]
 impl Call for Client {
-    async fn call(&mut self) {
-        self.inner.call().await;
+    async fn call(&mut self, command: impl Command + Send + Sync + 'static) {
+        self.inner.call(command).await;
     }
 }
 
 #[cfg(unix)]
 #[async_trait]
 impl Call for RealClient {
-    async fn call(&mut self) {
+
+    async fn call(&mut self, command: impl Command + Send + Sync + 'static) {
+        use hyper::body::HttpBody;
+        use hyperlocal::{UnixClientExt, Uri};
+        use tokio::io;
+        use tokio::io::AsyncWriteExt as _;
+
+        command.doit().await;
+
         let client = hyper::Client::unix();
         let url = Uri::new("/tmp/wasmship.sock", "/").into();
         let mut response = client.get(url).await.unwrap();
@@ -76,8 +80,9 @@ impl RealClient {
 #[cfg(windows)]
 #[async_trait]
 impl Call for RealClient {
-    async fn call(&mut self) {
-        unimplemented!("named pipe not support now.")
+    async fn call(&mut self, command: impl Command + Send + Sync + 'static) {
+        command.doit().await;
+        unimplemented!("named pipe not support now.");
     }
 }
 

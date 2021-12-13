@@ -1,8 +1,3 @@
-use hyper::{
-    service::{make_service_fn, service_fn},
-    Body, Response, Server,
-};
-use hyperlocal::UnixServerExt;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::{fs, path::Path};
 use tokio::runtime::Builder;
@@ -20,10 +15,24 @@ pub fn run() {
         .enable_all()
         .build()
         .unwrap()
-        .block_on(uds_server())
+        .block_on(server())
 }
 
+async fn server() {
+    #[cfg(unix)]
+    uds_server();
+    #[cfg(windows)]
+    unimplemented!("windows has not implement!")
+}
+
+#[cfg(unix)]
 async fn uds_server() {
+    use hyper::{
+        service::{make_service_fn, service_fn},
+        Body, Response, Server,
+    };
+    use hyperlocal::UnixServerExt;
+
     let path = Path::new("/tmp/wasmship.sock");
 
     if path.exists() {

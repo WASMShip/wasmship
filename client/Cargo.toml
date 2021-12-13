@@ -10,9 +10,13 @@ moudle = { path = "../library/moudle" }
 storage = { path = "../library/storage" }
 tokio = { version = "1", features = ["full"] }
 clap = "3.0.0-beta.2"
-hyperlocal = "0.8"
 hyper = "0.14"
 async-trait = "0.1"
+
+[target.'cfg(unix)'.dependencies]
+hyperlocal = "0.8"
+
+[target.'cfg(windows)'.dependencies]
 
 [[example]]
 name = "uds"

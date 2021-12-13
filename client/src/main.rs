@@ -1,12 +1,13 @@
 extern crate clap;
 
+use crate::command::run::RunCommand;
 use clap::{App, Arg};
 use client::Call;
 
 pub(crate) mod client;
 pub mod command;
 
-#[tokio::main]
+#[tokio::main(flavor = "current_thread")]
 async fn main() {
     let matches = App::new("Wasmship, a ship to wasm.")
         .version("0.1.0")
@@ -27,5 +28,5 @@ async fn main() {
         .get_matches();
 
     let mut client = client::Client::init();
-    client.call().await;
+    client.call(RunCommand::new()).await;
 }

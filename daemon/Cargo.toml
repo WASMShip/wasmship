@@ -10,4 +10,8 @@ moudle = { path = "../library/moudle" }
 storage = { path = "../library/storage" }
 tokio = { version = "1", features = ["full"] }
 hyper = "0.14"
+
+[target.'cfg(unix)'.dependencies]
 hyperlocal = "0.8"
+
+[target.'cfg(windows)'.dependencies]
