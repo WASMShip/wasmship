@@ -27,14 +27,3 @@ impl Modules {
         self.repositories.get_module(key, tag)
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_load_repoistries() {
-        let modules = Modules::load("tests/modules").unwrap();
-        assert!(modules.get_module("mymod", "latest").is_some());
-    }
-}

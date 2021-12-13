@@ -1,18 +1,9 @@
 [package]
-name = "wasmshipd"
+name = "runtime"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[lib]
-name = "wasmshipd"
-path = "src/wasmshipd/lib.rs"
-
-[[bin]]
-name = "wasmshipd"
-test = false
-doc = false
 
 [dependencies]
 anyhow = "1.0"
