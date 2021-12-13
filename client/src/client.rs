@@ -1,7 +1,6 @@
 use crate::command::Command;
 use async_trait::async_trait;
 
-
 pub struct Client {
     inner: RealClient,
     scheme: String,
@@ -49,7 +48,6 @@ impl Call for Client {
 #[cfg(unix)]
 #[async_trait]
 impl Call for RealClient {
-
     async fn call(&mut self, command: impl Command + Send + Sync + 'static) {
         use hyper::body::HttpBody;
         use hyperlocal::{UnixClientExt, Uri};
