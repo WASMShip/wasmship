@@ -1,5 +1,4 @@
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::{fs, path::Path};
 use tokio::runtime::Builder;
 
 const PHRASE: &str = "It's a Unix system. I know this.";
@@ -31,6 +30,7 @@ async fn uds_server() {
         service::{make_service_fn, service_fn},
         Body, Response, Server,
     };
+    use std::{fs, path::Path};
     use hyperlocal::UnixServerExt;
 
     let path = Path::new("/tmp/wasmship.sock");

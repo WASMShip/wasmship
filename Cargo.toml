@@ -20,9 +20,9 @@ daemon = { path = "./daemon" }
 members = [
     "client",
     "daemon",
-    "library/moudle",
-    "library/runtime",
-    "library/storage",
+    "crates/moudle",
+    "crates/runtime",
+    "crates/storage",
 ]
 
 [[example]]
